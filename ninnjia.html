@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+</head>
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    html,
+    body {
+        height: 100%;
+        width: 100%;
+    }
+
+    .container {
+        width: 100%;
+        height: 100%;
+        position: relative;
+        background:url(https://z3.ax1x.com/2021/11/18/ITI856.jpg);
+        background-size: cover;
+        overflow: hidden;
+    }
+
+    .bridge {
+        position: absolute;
+        bottom: 100%;
+        right: 0;
+        width: 6px;
+        background-color: #114773;
+        transition: transform .4s;
+        transform-origin:100% 100%;
+    }
+
+    .plant {
+        height: 37%;
+        position: absolute;
+        bottom: 0;
+        display: flex;
+    }
+
+    .block {
+        height: 100%;
+        width: 150px;
+        /* background-color: #114773; */
+        background: url(https://z3.ax1x.com/2021/11/18/ITjYTg.jpg);
+        position: relative;
+    }
+
+    .space {
+        height: 100%;
+    }
+
+    .player {
+        width: 140px;
+        height: 200px;
+        background:url(https://z3.ax1x.com/2021/11/18/IToZdI.png);
+        background-position: -30px -35px;
+        position: absolute;
+        bottom: 100%;
+
+    }
+
+    .score {
+        height: 50px;
+        width: 400px;
+        margin: 0 auto;
+        font-size: 50px;
+        color: tomato;
+    }
+</style>
+
+<body>
+    <div class="container">
+        <div class="score">得分：<span>-1</span></div>
+        <div class="plant">
+            <div class="player"></div>
+            <div class="block" index='1'>
+                <div class="bridge"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var id 
+        var bridgeW
+        var flag = 1
+        $(window).ready(function () {
+            randomBlock()//开局生成第二个台子
+            movePlayer()//开局让角色移动到边缘
+        })
+
+        $(document).mousedown(function () {
+            bridge() //按下桥梁伸长
+        })
+        $(document).mouseup(function () {
+            bridgeStop() //伸长停止
+            randomBlock() //生成下一个角色
+        })
+        //桥梁伸缩功能
+        function bridge(fn) {
+            if (flag = 1) {
+                flag = 0
+                id = setInterval(() => {
+                    let bridgeW = parseInt($('.bridge').eq(-2).css('height'))//对倒数第二个桥梁操作
+                    $('.bridge').eq(-2).css('height', bridgeW + 1) //每10毫秒伸长1像素
+                }, 10)
+            }
+        }
+        //停止伸缩桥梁
+        function bridgeStop() {
+            flag = 1
+            clearInterval(id) //清除伸长定时器
+            $('.bridge').eq(-2).css('transform', 'rotate(90deg)') //旋转桥梁
+            setTimeout(function () {
+                movePlayer() //延时0.5秒后移动角色
+            }, 500)
+        }
+        //随机生成方块\
+        function randomBlock() {
+            let ranWidth = parseInt(Math.random() * 300) + 50
+            let newbridge = $('<div class="bridge"></div>')
+            $('<div class="space"></div>') //插入空白区域
+                .appendTo($('.plant')) //插入在plant的最后
+                .css('width', ranWidth)
+            $('<div class="block"><div class="bridge"></div></div>').insertAfter($('.space').last())//插入平台方块
+
+            if ($('.plant').width() >= $(window).width()) { //判断是否超出屏幕
+                let tempW = $('.plant').offset().left - ranWidth - 150 //计算需要左移动的距离
+                $('.plant').animate({left:tempW},2000) //移动动画
+
+            }
+            
+        }
+        //角色移动函数
+        function movePlayer() {
+            let moveWidth = $('.plant').width() - $('.space').last().width() - 256 //成功的滑动距离
+            let bridgeW = $('.bridge').eq(-3).height() //获得桥的长度
+            let faultWidth = $('.player').position().left + bridgeW //失败的滑动距离
+            let spaceW = $('.space').eq(-2).width() //获得间隔的宽度
+            if (bridgeW+5 < spaceW) { //判断大小,是否会发生掉落，这里包容5像素
+                $('.player')
+                    .css('background-position','-332px 471px')//切换跑动状态
+                    .animate({ left: faultWidth }, 2000, function () { //失败先走到桥梁顶端
+                    $('.player')
+                        .css('background-position','-334px -35px')//切换下落状态
+                        .animate({ top: $('.plant').height() }, 1000, function () { //滑动的回调函数，下落到游戏之外
+                        alert(`游戏结束,你的成绩为${score}分`)   //下落的回调函数弹出通知
+                        location.href=""//游戏结束刷新网页
+                    })
+                })
+            } else {
+                $('.player')
+                    .animate({ left: moveWidth }, 2000,function(){
+                        $('.player').css('background-position','-30px -35px')//移动结束，回调函数设置站立状态
+                    })
+                    .css('background-position','-332px 471px')//切换跑动状态
+                addScore()//成功越过进行加分
+            }
+        }
+        //加分函数
+        var score
+        function addScore() {
+            score = $('.score>span').text()
+            score++
+            $('.score>span').text(score);
+        }
+        //
+    </script>
+</body>
+
+</html>
